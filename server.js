@@ -1,6 +1,18 @@
 const WebSocket = require('ws');
+const http = require('http');
 const { v4: uuidv4 } = require('uuid');
-const wss = new WebSocket.Server({ port: 8080 });
+
+// Create HTTP server to keep Render service alive
+const server = http.createServer((req, res) => {
+  res.writeHead(200);
+  res.end('WebSocket Server is running');
+});
+
+// Use dynamic port for Render, or fallback to 8080 locally
+const PORT = process.env.PORT || 8080;
+
+const wss = new WebSocket.Server({ server });
+
 const allPlayers = new Map();
 
 console.log("WebSocket server running on ws://localhost:8080");
