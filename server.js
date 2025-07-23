@@ -14,13 +14,10 @@ const PORT = process.env.PORT || 8080;
 const wss = new WebSocket.Server({ server });
 
 const allPlayers = new Map();
-
-console.log("WebSocket server running on ws://localhost:8080");
-
-var gamestarted = false;
+let gamestarted = false;
 
 function broadcast(message, sender = null) {
-  wss.clients.forEach(function each(client) {
+  wss.clients.forEach(client => {
     if (client !== sender && client.readyState === WebSocket.OPEN) {
       client.send(message);
     }
@@ -28,87 +25,78 @@ function broadcast(message, sender = null) {
 }
 
 function activateRandomTile() {
-  const randomIndex = Math.floor(Math.random() * 9) + 1; // 1 to 9
+  const randomIndex = Math.floor(Math.random() * 9) + 1;
   const message = JSON.stringify({ type: "activate", index: randomIndex });
-  broadcast(message); // Send to all clients
+  broadcast(message);
 }
 
-
 function leaderboard() {
-  leaderboardData = Array.from(allPlayers.values())
+  const leaderboardData = Array.from(allPlayers.values())
     .map(player => ({ username: player.username, score: player.score }))
     .sort((a, b) => b.score - a.score);
-
+  
   broadcast(JSON.stringify({ type: "leaderBoard", leaderboard: leaderboardData }));
 }
 
-  wss.on('connection', function connection(ws) {
-	  ws.id = uuidv4();
-	  ws.username = null;
-	  ws.score = 0;
-	  console.log(`New client connected: ${ws.id}`);
-	  ws.send("Welcome! You are connected");
-	  
-	  ws.send(JSON.stringify({ type: "your_id", id: ws.id })); //send id to client
-	  	
+wss.on('connection', function connection(ws) {
+  ws.id = uuidv4();
+  ws.username = null;
+  ws.score = 0;
 
-
+  console.log(`New client connected: ${ws.id}`);
+  ws.send("Welcome! You are connected");
+  ws.send(JSON.stringify({ type: "your_id", id: ws.id }));
 
   ws.on('message', function incoming(message) {
     let data;
     try {
       data = JSON.parse(message.toString());
     } catch (e) {
-      // It's just a chat message
-	  const text = message.toString();
+      const text = message.toString();
       console.log(`Chat from ${ws.username}:`, text);
-	  ws.send(`You: ${text}`);
+      ws.send(`You: ${text}`);
       broadcast(`${ws.username} : ${text}`, ws);
       return;
     }
-	
-	if (data.type === "set_username") {
+
+    if (data.type === "set_username") {
       ws.username = data.username || "Guest";
       console.log(`Client ${ws.id} set username: ${ws.username}`);
-	  ws.send(JSON.stringify({ type: "your_username", username: ws.username }));
-	  ws.send(JSON.stringify({ type: "start_game", message: "Game started!" }));
-	  	
-	  ws.score = 0;
-	  allPlayers.set(ws, { username: ws.username, score: ws.score });
-	 
+      ws.send(JSON.stringify({ type: "your_username", username: ws.username }));
+      ws.send(JSON.stringify({ type: "start_game", message: "Game started!" }));
+      ws.score = 0;
+      allPlayers.set(ws, { username: ws.username, score: ws.score });
       return;
     }
 
-	if (data.type === "host_start") {
-		console.log("host has start the game")
-		if (!gamestarted) {
-			gamestarted = data.start;
-			setInterval(activateRandomTile,1000);
-			broadcast(JSON.stringify({ type: "startBtn_clear" }));	
-			
-			leaderboard();
-		}
+    if (data.type === "host_start") {
+      console.log("Host has started the game");
+      if (!gamestarted) {
+        gamestarted = data.start;
+        setInterval(activateRandomTile, 1000);
+        broadcast(JSON.stringify({ type: "startBtn_clear" }));
+        leaderboard();
+      }
     }
 
     if (data.type === "click") {
-		ws.score += 1;
-		data.senderId = ws.id;  // attach sender ID
-		data.score = ws.score;
-		console.log( `${ws.username} score :${ws.score} ` );
-		ws.send(JSON.stringify({ type: "score", score: data.score }));
-		allPlayers.set(ws, { username: ws.username, score: ws.score });
-		
-		//Build leaderboard array
-		leaderboard();
-		broadcast(JSON.stringify(data)); 
-		
+      ws.score += 1;
+      data.senderId = ws.id;
+      data.score = ws.score;
+      console.log(`${ws.username} score: ${ws.score}`);
+      ws.send(JSON.stringify({ type: "score", score: ws.score }));
+      allPlayers.set(ws, { username: ws.username, score: ws.score });
+      leaderboard();
+      broadcast(JSON.stringify(data));
     }
-	
-	
   });
 
   ws.on('close', () => {
-    console.log(`Client disconnected : ${ws.username} (${ws.id})`);
-   });  
-  
+    console.log(`Client disconnected: ${ws.username} (${ws.id})`);
+  });
+});
+
+// Start the HTTP + WebSocket server
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
