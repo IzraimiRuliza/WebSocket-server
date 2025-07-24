@@ -256,7 +256,6 @@
 			
 			if (data.type === "resetBtn_clear") {
 				document.getElementById("resetBtn").style.display = "none";
-				log("Host has reset the game");
 				return;
 			}
 			
@@ -328,6 +327,7 @@
 	function gameStarted() {
 	  <!-- document.getElementById("startBtn").style.display = "none";	 -->
 	  ws.send(JSON.stringify({ type: "host_start", start: true }));	
+	  log("Host has started the game");
     }
 
     function sendMessage() {
@@ -339,7 +339,8 @@
     }
 	
 	function gameReset() {
-	  ws.send(JSON.stringify({ type: "host_reset", reset: true }));	
+	  ws.send(JSON.stringify({ type: "host_reset", reset: true }));
+	  log("Host has reset the game");
     }
 
     function log(message) {
