@@ -15,6 +15,7 @@ const wss = new WebSocket.Server({ server });
 
 const allPlayers = new Map();
 let gamestarted = false;
+let gameInterval = null;
 
 function broadcast(message, sender = null) {
   wss.clients.forEach(client => {
@@ -26,6 +27,7 @@ function broadcast(message, sender = null) {
 
 function activateRandomTile() {
   const randomIndex = Math.floor(Math.random() * 9) + 1;
+  console.log(randomIndex);
   const message = JSON.stringify({ type: "activate", index: randomIndex });
   broadcast(message);
 }
@@ -63,9 +65,10 @@ wss.on('connection', function connection(ws) {
       ws.username = data.username || "Guest";
       console.log(`Client ${ws.id} set username: ${ws.username}`);
       ws.send(JSON.stringify({ type: "your_username", username: ws.username }));
-      ws.send(JSON.stringify({ type: "start_game", message: "Game started!" }));
-      ws.score = 0;
+      ws.send(JSON.stringify({ type: "start_game", message: "Game started!" }));	
       allPlayers.set(ws, { username: ws.username, score: ws.score });
+	  broadcast(`${ws.username} is online `,ws);
+	  leaderboard();
       return;
     }
 
@@ -73,9 +76,10 @@ wss.on('connection', function connection(ws) {
       console.log("Host has started the game");
       if (!gamestarted) {
         gamestarted = data.start;
-        setInterval(activateRandomTile, 1000);
+        gameInterval = setInterval(activateRandomTile, 1000);
         broadcast(JSON.stringify({ type: "startBtn_clear" }));
-        leaderboard();
+		ws.send(JSON.stringify({ type: "resetBtn_display" }));
+       
       }
     }
 
@@ -89,6 +93,30 @@ wss.on('connection', function connection(ws) {
       leaderboard();
       broadcast(JSON.stringify(data));
     }
+	
+	if (data.type === "host_reset") {
+      console.log("Host has reset the game");
+	  if (gamestarted) {
+        gamestarted = false;
+		
+		if (gameInterval !== null) {
+		  clearInterval(gameInterval);
+		  gameInterval = null;
+		}
+		
+		for (const [playerWS, playerData] of allPlayers.entries()) {
+		  playerData.score = 0;
+		  playerWS.score = 0;
+		  allPlayers.set(playerWS, playerData);
+		}
+		
+		ws.send(JSON.stringify({ type: "startBtn_display" }));
+		ws.send(JSON.stringify({ type: "resetBtn_clear" }));
+		broadcast(JSON.stringify({ type: "tile_clear" }));
+        leaderboard();
+      }
+    }
+	
   });
 
   ws.on('close', () => {
