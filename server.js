@@ -27,7 +27,6 @@ function broadcast(message, sender = null) {
 
 function activateRandomTile() {
   const randomIndex = Math.floor(Math.random() * 9) + 1;
-  console.log(randomIndex);
   const message = JSON.stringify({ type: "activate", index: randomIndex });
   broadcast(message);
 }
