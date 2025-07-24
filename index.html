@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>WebSocket Client</title>
+  <title>WebSocket Client (local)</title>
     <style>
 	
 	 body {
@@ -81,6 +81,20 @@
 		display: block; /* Ensure it's treated as a block element */
     }
 	
+	#resetBtn {
+		font-size: 16px;
+		font-weight: bold;
+		color: #333;
+		text-align: center;
+		margin: 20px auto; /* Auto left/right centers it horizontally */
+		background: #fff;
+		padding: 10px 30px;
+		border-radius: 10px;
+		box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+		cursor: pointer;
+		display: none; /* Ensure it's treated as a block element */
+    }
+	
 	#menu { 
 	  position: fixed;
       top: 0;
@@ -144,6 +158,8 @@
     </div>
 	
     <button id="startBtn" onclick="gameStarted()">START</button>
+	
+	<button id="resetBtn" onclick="gameReset()">RESET</button>
     
 	<h3 id = "leaderBoard"></h3>
 	
@@ -237,6 +253,23 @@
 				document.getElementById("startBtn").style.display = "none";
 				return;
 			}
+			
+			if (data.type === "resetBtn_clear") {
+				document.getElementById("resetBtn").style.display = "none";
+				log("Host has reset the game");
+				return;
+			}
+			
+			if (data.type === "resetBtn_display") {
+				document.getElementById("resetBtn").style.display = "block";
+				return;
+			}
+			
+			if (data.type === "startBtn_display") {
+				document.getElementById("startBtn").style.display = "block";
+				score.innerHTML = "0";
+				return;
+			}
 
 			if (data.type === "activate") {
 			  const btn = document.getElementById("button" + data.index);
@@ -251,8 +284,14 @@
 			}
 			
 			if (data.type === "score") {
-			score.innerHTML = data.score;
+				score.innerHTML = data.score;
 			}
+			
+			if (data.type === "tile_clear") {
+				for (let i = 1; i <= 9; i++) {
+					const btn = document.getElementById("button" + i).style.backgroundColor ="black";
+				}
+			};
 			
 			if (data.type === "leaderBoard") {
 			leaderBoard.innerHTML = ""; // Clear previous content
@@ -297,6 +336,10 @@
       if (msg === "") return;
       ws.send(msg);
       input.value = "";
+    }
+	
+	function gameReset() {
+	  ws.send(JSON.stringify({ type: "host_reset", reset: true }));	
     }
 
     function log(message) {
