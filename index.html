@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>WebSocket Client</title>
+  <title>WebSocket Client (local)</title>
     <style>
 	
 	 body {
@@ -250,22 +250,22 @@
 			}
 			
 			if (data.type === "startBtn_clear") {
-				document.getElementById("startBtn").style.display = "none";
+				hide("startBtn");
 				return;
 			}
 			
 			if (data.type === "resetBtn_clear") {
-				document.getElementById("resetBtn").style.display = "none";
+				hide("resetBtn");
 				return;
 			}
 			
 			if (data.type === "resetBtn_display") {
-				document.getElementById("resetBtn").style.display = "block";
+				show("resetBtn");
 				return;
 			}
 			
 			if (data.type === "startBtn_display") {
-				document.getElementById("startBtn").style.display = "block";
+				show("startBtn");
 				score.innerHTML = "0";
 				return;
 			}
@@ -326,7 +326,7 @@
 	
 	function gameStarted() {
 	  <!-- document.getElementById("startBtn").style.display = "none";	 -->
-	  ws.send(JSON.stringify({ type: "host_start", start: true }));	
+	  ws.send(JSON.stringify({ type: "host_start", start: true }));
 	  log("Host has started the game");
     }
 
@@ -340,7 +340,15 @@
 	
 	function gameReset() {
 	  ws.send(JSON.stringify({ type: "host_reset", reset: true }));
-	  log("Host has reset the game");
+	  log("Host has reset the game");	  
+    }
+	
+	function hide(item) {
+      document.getElementById(item).style.display = "none";
+    }
+	
+	function show(item) {
+      document.getElementById(item).style.display = "block";
     }
 
     function log(message) {
