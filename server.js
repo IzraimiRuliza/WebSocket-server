@@ -75,7 +75,7 @@ wss.on('connection', function connection(ws) {
       console.log("Host has started the game");
       if (!gamestarted) {
         gamestarted = data.start;
-        gameInterval = setInterval(activateRandomTile,   Math.floor(Math.random() * 5000) + 5000);
+        gameInterval = setInterval(activateRandomTile,   Math.floor(Math.random() * 3000) + 5000);
         broadcast(JSON.stringify({ type: "startBtn_clear" }));
 		ws.send(JSON.stringify({ type: "resetBtn_display" }));
        
@@ -119,6 +119,7 @@ wss.on('connection', function connection(ws) {
   });
 
   ws.on('close', () => {
+    allPlayers.delete(ws); // Remove the player on disconnect
     console.log(`Client disconnected: ${ws.username} (${ws.id})`);
   });
 });
