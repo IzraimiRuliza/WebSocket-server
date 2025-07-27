@@ -119,6 +119,7 @@ wss.on('connection', function connection(ws) {
   });
 
   ws.on('close', () => {
+    broadcast(`${ws.username} was disconnected `,ws);
     allPlayers.delete(ws); // Remove the player on disconnect
     console.log(`Client disconnected: ${ws.username} (${ws.id})`);
   });
