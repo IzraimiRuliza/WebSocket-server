@@ -75,7 +75,7 @@ wss.on('connection', function connection(ws) {
       console.log("Host has started the game");
       if (!gamestarted) {
         gamestarted = data.start;
-        gameInterval = setInterval(activateRandomTile, 100);
+        gameInterval = setInterval(activateRandomTile,   Math.floor(Math.random() * 5000) + 5000);
         broadcast(JSON.stringify({ type: "startBtn_clear" }));
 		ws.send(JSON.stringify({ type: "resetBtn_display" }));
        
